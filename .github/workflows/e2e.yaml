@@ -1,0 +1,76 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: ["main"]
+
+  pull_request:
+    branches: ["main", "release-*"]
+
+concurrency:
+  group: e2e-tests-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  ko-resolve:
+    name: e2e tests
+    strategy:
+      matrix:
+        go-version: ["1.20"]
+        platform: ["ubuntu-latest"]
+    runs-on: ${{ matrix.platform }}
+    env:
+      KO_DOCKER_REPO: kind.local
+      KIND_CLUSTER_NAME: e2e
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+        id: go
+
+      - name: Setup ko
+        uses: ko-build/setup-ko@v0.6
+
+      - name: Setup KinD Cluster
+        env:
+          KIND_VERSION: v0.18.0
+          NODE_VERSION: v1.25.3
+          NODE_SHA: sha256:a69c29d3d502635369a5fe92d8e503c09581fcd406ba6598acc5d80ff5ba81b1
+        run: |
+          set -x
+          curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(uname)-amd64
+          chmod +x ./kind
+          sudo mv kind /usr/local/bin
+
+          kind create cluster --wait 3m --name ${KIND_CLUSTER_NAME}
+
+      - name: Build and upload images
+        run: |
+          echo "PUBLISHER_IMAGE=$(ko build -B --platform=linux/amd64 ./publisher)" >> "$GITHUB_ENV"
+          echo "SUBSCRIBER_IMAGE=$(ko build -B --platform=linux/amd64 ./subscriber)" >> "$GITHUB_ENV"
+
+      - name: "Run E2E Tests"
+        run: |
+          go test -timeout 10m -v -count 1 -race ./e2e -args -v 4
+
+      - name: "Debug"
+        if: ${{ always() }}
+        run: |
+          kubectl get pods --all-namespaces
+
+      - name: Collect diagnostics
+        uses: chainguard-dev/actions/kind-diag@main
+        # Only upload logs on failure.
+        if: ${{ failure() }}
+        with:
+          cluster-resources: nodes
+          namespace-resources: pods,svc
+          artifact-name: logs

@@ -81,7 +81,7 @@ func natsRunning() features.Func {
 			return s.Status.ReadyReplicas == 1
 		})
 
-		err = wait.For(serverReady, wait.WithTimeout(time.Minute*3))
+		err = wait.For(serverReady, wait.WithTimeout(time.Minute*5))
 		assert.NilError(t, err)
 
 		return ctx
