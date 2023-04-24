@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	ebv1alpha "github.com/aws-controllers-k8s/eventbridge-controller/apis/v1alpha1"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	ecrsvcsdk "github.com/aws/aws-sdk-go/service/ecrpublic"
+	ebsvcsdk "github.com/aws/aws-sdk-go/service/eventbridge"
+	"gotest.tools/v3/assert"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/klog/v2"
@@ -132,4 +138,35 @@ func copyMap(in map[string]string) map[string]string {
 		out[k] = v
 	}
 	return out
+}
+
+func eventBusFor(name, namespace string, tags ...*ebv1alpha.Tag) ebv1alpha.EventBus {
+	return ebv1alpha.EventBus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: ebv1alpha.EventBusSpec{
+			Name: aws.String(name),
+			Tags: tags,
+		},
+	}
+}
+
+func ecrSDKClient(t *testing.T) *ecrsvcsdk.ECRPublic {
+	s, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1"), // https://docs.aws.amazon.com/general/latest/gr/ecr-public.html
+	})
+	assert.NilError(t, err, "create ecr service client")
+
+	return ecrsvcsdk.New(s)
+}
+
+func ebSDKClient(t *testing.T) *ebsvcsdk.EventBridge {
+	s, err := session.NewSession(&aws.Config{
+		Region: aws.String(awscfg.Region),
+	})
+	assert.NilError(t, err, "create eventbridge service client")
+
+	return ebsvcsdk.New(s)
 }
