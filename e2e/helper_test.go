@@ -22,9 +22,7 @@ const (
 	namespaceKey = namespaceCtxKey("featureNamespace")
 )
 
-var (
-	commonLabels = map[string]string{"app": "e2e"}
-)
+var commonLabels = map[string]string{"app": "e2e"}
 
 // createNSForFeature creates a random namespace with the runID as a prefix. It is stored in the context
 // so that the deleteNSForFeature routine can look it up and delete it.
@@ -89,7 +87,7 @@ func newDeployment(namespace string, name string, replicas int32, image string) 
 				},
 			},
 		},
-		InitialDelaySeconds: 3,
+		InitialDelaySeconds: 1,
 		TimeoutSeconds:      3,
 		PeriodSeconds:       1,
 		SuccessThreshold:    1,
