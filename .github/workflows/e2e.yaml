@@ -36,6 +36,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
         id: go
 
+      - name: Install tparse
+        run: go install github.com/mfridman/tparse@latest
+
       - name: Setup ko
         uses: ko-build/setup-ko@v0.6
 
@@ -59,7 +62,7 @@ jobs:
 
       - name: "Run E2E Tests (w/o EventBridge)"
         run: |
-          go test -timeout 10m -v -count 1 -race ./e2e -args -v 4 --skip-labels=feature=e2e-eventbridge
+          go test -timeout 10m -v -json -count 1 -race ./e2e -args -v 4 --skip-labels=feature=e2e-eventbridge | tparse -follow -all -notests
 
       - name: "Debug"
         if: ${{ always() }}
