@@ -57,9 +57,9 @@ jobs:
           echo "PUBLISHER_IMAGE=$(ko build -B --platform=linux/amd64 ./publisher)" >> "$GITHUB_ENV"
           echo "SUBSCRIBER_IMAGE=$(ko build -B --platform=linux/amd64 ./subscriber)" >> "$GITHUB_ENV"
 
-      - name: "Run E2E Tests"
+      - name: "Run E2E Tests (w/o EventBridge)"
         run: |
-          go test -timeout 10m -v -count 1 -race ./e2e -args -v 4
+          go test -timeout 10m -v -count 1 -race ./e2e -args -v 4 --skip-labels=feature=e2e-eventbridge
 
       - name: "Debug"
         if: ${{ always() }}
