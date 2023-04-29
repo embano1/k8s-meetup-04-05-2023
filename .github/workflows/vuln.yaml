@@ -1,0 +1,41 @@
+name: Vulnerability Checks
+
+permissions: {} 
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 10 * * 1" # run "At 10:00 on Monday"
+  workflow_call:
+
+jobs:
+  run:
+    name: govulncheck
+    strategy:
+      matrix:
+        go-version: ["1.20"]
+        platform: ["ubuntu-latest"]
+      fail-fast: true
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+        id: go
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        run: govulncheck -test ./...
