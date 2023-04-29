@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ko-resolve:
+  e2e:
     name: e2e tests
     strategy:
       matrix:
