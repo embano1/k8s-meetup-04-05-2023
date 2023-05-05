@@ -103,16 +103,16 @@ func subscriberRunning() features.Func {
 		ns := getTestNamespaceFromContext(ctx, t)
 
 		name := "subscriber"
-		publisher := newDeployment(ns, name, 1, envCfg.Subscriber)
+		subscriber := newDeployment(ns, name, 1, envCfg.Subscriber)
 		klog.Infof("creating deployment %q", name)
-		err := cfg.Client().Resources().Create(ctx, &publisher)
+		err := cfg.Client().Resources().Create(ctx, &subscriber)
 		assert.NilError(t, err)
 
-		err = cfg.Client().Resources().Get(ctx, name, ns, &publisher)
+		err = cfg.Client().Resources().Get(ctx, name, ns, &subscriber)
 		assert.NilError(t, err)
 
 		klog.Infof("waiting for deployment %q in namespace %q to become ready", name, ns)
-		ready := conditions.New(cfg.Client().Resources()).DeploymentConditionMatch(&publisher, v1.DeploymentAvailable, v12.ConditionTrue)
+		ready := conditions.New(cfg.Client().Resources()).DeploymentConditionMatch(&subscriber, v1.DeploymentAvailable, v12.ConditionTrue)
 		err = wait.For(ready, wait.WithTimeout(time.Minute))
 		assert.NilError(t, err)
 
