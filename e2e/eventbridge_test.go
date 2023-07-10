@@ -33,7 +33,7 @@ const (
 	// helm
 	eventbridgeRegistry     = "public.ecr.aws"
 	eventbridgeChart        = "oci://public.ecr.aws/aws-controllers-k8s/eventbridge-chart"
-	eventbridgeChartVersion = "v1.0.0"
+	eventbridgeChartVersion = "1.0.2"
 	eventbridgeDeployment   = "ack-eventbridge-controller"
 	controllerNamespace     = "ack-system"
 	eventbridgeConfig       = "./testdata/eventbridge.config"
